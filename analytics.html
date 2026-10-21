@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<section class="dashboard-heading">
+  <div><div class="eyebrow">PERFORMANCE REPORT</div><h1>Queue analytics<span class="heading-period">.</span></h1><p>Use these measurements to discuss scheduling behavior in your OS viva.</p></div>
+  <a class="button button-secondary" href="{{ url_for('admin_dashboard') }}">← Back to operations</a>
+</section>
+<section class="stats-grid">
+  <div class="stat-card"><span class="stat-label">Current policy</span><strong class="policy-stat">{{ scheduler.replace('_',' ') }}</strong><span class="stat-foot">Scheduler configuration</span></div>
+  <div class="stat-card"><span class="stat-label">Printers busy</span><strong>{{ printer_busy }}<span class="out-of"> / {{ printer_total }}</span></strong><span class="stat-foot">Current resource usage</span></div>
+  <div class="stat-card"><span class="stat-label">Avg. waiting time</span><strong>{{ (wait_times|sum / wait_times|length)|round(1) if wait_times else '—' }}{% if wait_times %}<small class="unit"> sec</small>{% endif %}</strong><span class="stat-foot">Completed jobs only</span></div>
+  <div class="stat-card"><span class="stat-label">Avg. turnaround</span><strong>{{ (turnaround_times|sum / turnaround_times|length)|round(1) if turnaround_times else '—' }}{% if turnaround_times %}<small class="unit"> sec</small>{% endif %}</strong><span class="stat-foot">Submit to completion</span></div>
+</section>
+<div class="content-grid analytics-grid">
+  <section class="panel">
+    <div class="panel-heading"><div><div class="eyebrow">JOB DISTRIBUTION</div><h2>Jobs by status</h2></div></div>
+    <div class="bar-list">
+      {% set status_map = dict((r['status'],r['count']) for r in rows) %}
+      {% set total = rows|sum(attribute='count') %}
+      {% for key,label in [('WAITING','Waiting'),('PRINTING','Printing'),('COMPLETED','Completed'),('FAILED','Failed'),('CANCELLED','Cancelled')] %}
+      <div class="bar-row"><div><span>{{ label }}</span><b>{{ status_map.get(key,0) }}</b></div><div class="bar-track"><span style="width: {{ (100*status_map.get(key,0)/total)|round|int if total else 0 }}%"></span></div></div>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-heading"><div><div class="eyebrow">METRIC DEFINITIONS</div><h2>How to interpret</h2></div></div>
+    <div class="metric-explain"><b>Waiting time</b><p>Time between job submission and the beginning of printing.</p></div>
+    <div class="metric-explain"><b>Turnaround time</b><p>Time between job submission and completion.</p></div>
+    <div class="metric-explain"><b>Printer utilization</b><p>Busy printers divided by all configured printers at this instant. It is a snapshot, not historical utilization.</p></div>
+    <div class="metric-explain"><b>Experiment tip</b><p>Submit a similar set of jobs under FCFS, SJF, and Priority + Aging, then compare completed-job waiting time. Resetting the demo database between controlled experiments helps keep results comparable.</p></div>
+  </section>
+</div>
+{% endblock %}

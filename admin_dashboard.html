@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Operations dashboard{% endblock %}
+{% block content %}
+<section class="dashboard-heading">
+  <div><div class="eyebrow">ADMINISTRATOR CONSOLE</div><h1>Print operations<span class="heading-period">.</span></h1><p>Manage the queue, scheduling policy, and shared printer resources.</p></div>
+  <div class="sim-badge"><span class="pulse-dot"></span> Simulation running</div>
+</section>
+<section class="stats-grid">
+  <div class="stat-card"><span class="stat-label">Waiting jobs</span><strong id="count-WAITING">{{ counts.WAITING }}</strong><span class="stat-foot">Awaiting a compatible printer</span></div>
+  <div class="stat-card"><span class="stat-label">Active jobs</span><strong id="count-PRINTING">{{ counts.PRINTING }}</strong><span class="stat-foot">Currently printing</span></div>
+  <div class="stat-card"><span class="stat-label">Completed</span><strong id="count-COMPLETED">{{ counts.COMPLETED }}</strong><span class="stat-foot">Jobs finished</span></div>
+  <div class="stat-card"><span class="stat-label">Failed / cancelled</span><strong>{{ counts.FAILED + counts.CANCELLED }}</strong><span class="stat-foot">Require review or closed</span></div>
+</section>
+<div class="content-grid admin-top-grid">
+  <section class="panel">
+    <div class="panel-heading"><div><div class="eyebrow">SCHEDULING POLICY</div><h2>Queue strategy</h2></div><span class="panel-icon">↗</span></div>
+    <p class="panel-description">Choose how the scheduler selects the next compatible waiting job. Changes apply to future allocations.</p>
+    <form method="post" action="{{ url_for('set_scheduler') }}" class="scheduler-form">
+      <label>Active policy
+        <select name="scheduler">
+          <option value="FCFS" {{ 'selected' if scheduler=='FCFS' else '' }}>FCFS — First Come, First Served</option>
+          <option value="SJF" {{ 'selected' if scheduler=='SJF' else '' }}>SJF — Shortest Job First</option>
+          <option value="PRIORITY" {{ 'selected' if scheduler=='PRIORITY' else '' }}>Priority — Urgent first</option>
+          <option value="PRIORITY_AGING" {{ 'selected' if scheduler=='PRIORITY_AGING' else '' }}>Priority + Aging — Reduce starvation</option>
+        </select>
+      </label>
+      <button class="button button-primary" type="submit">Apply policy</button>
+    </form>
+    <div class="policy-explainer"><b>Current: {{ scheduler.replace('_',' ') }}</b><p>Printer allocation is protected by a lock so simultaneous requests cannot reserve the same available printer in this single-server simulation.</p></div>
+  </section>
+  <section class="panel">
+    <div class="panel-heading"><div><div class="eyebrow">RESOURCE CONTROL</div><h2>Manage printers</h2></div><span class="live-pill">LIVE</span></div>
+    <div class="printer-list" id="printer-list">
+      {% for p in printers %}
+      <div class="printer-row admin-printer-row" data-printer-id="{{ p.id }}">
+        <div class="printer-symbol">▤</div><div class="printer-info"><b>{{ p.name }}</b><small>{{ p.pages_per_minute }} pages/min · {{ 'Color' if p.supports_color else 'B&W only' }}</small></div>
+        <span class="status status-{{ p.status|lower }}">{{ p.status }}</span>
+        <form method="post" action="{{ url_for('toggle_printer', printer_id=p.id) }}"><button class="text-button" type="submit">{{ 'Restore' if p.status=='OFFLINE' else 'Take offline' }}</button></form>
+      </div>
+      {% endfor %}
+    </div>
+    <form method="post" action="{{ url_for('add_printer') }}" class="add-printer-form">
+      <input name="name" placeholder="New printer name" maxlength="60" required>
+      <input name="pages_per_minute" type="number" min="1" max="120" value="20" aria-label="Pages per minute" required>
+      <label class="checkbox-mini"><input type="checkbox" name="supports_color" checked> Color</label>
+      <button class="button button-secondary button-small" type="submit">+ Add</button>
+    </form>
+  </section>
+</div>
+<section class="panel jobs-panel">
+  <div class="panel-heading"><div><div class="eyebrow">GLOBAL QUEUE</div><h2>All print jobs</h2></div><span class="subtle-label">Latest 150 jobs</span></div>
+  <div class="table-wrap">
+    <table><thead><tr><th>JOB / OWNER</th><th>DOCUMENT</th><th>PAGES</th><th>PRIORITY</th><th>PRINTER</th><th>STATUS</th><th>PROGRESS</th><th>ACTION</th></tr></thead>
+    <tbody id="jobs-table">
+    {% for j in jobs %}
+      <tr data-job-id="{{ j.id }}">
+        <td><div class="job-title">{{ j.public_id }}</div><div class="table-sub">{{ j.display_name }}</div></td>
+        <td>{{ j.original_filename }}</td><td>{{ j.page_count*j.copies }}</td>
+        <td><span class="priority priority-{{ j.priority|lower }}">{{ j.priority }}</span></td>
+        <td>{{ j.printer_name or '—' }}</td><td><span class="status status-{{ j.status|lower }}">{{ j.status }}</span></td>
+        <td><div class="progress-cell"><div class="progress-track"><span style="width: {{ (100*j.progress_pages/(j.page_count*j.copies))|round|int if j.page_count*j.copies else 0 }}%"></span></div><small>{{ j.progress_pages }}/{{ j.page_count*j.copies }} pages</small></div></td>
+        <td>
+          {% if j.status in ['WAITING','ASSIGNED'] %}
+          <form method="post" action="{{ url_for('cancel_job', job_id=j.id) }}"><button class="text-button" type="submit">Cancel</button></form>
+          {% elif j.status == 'FAILED' %}
+          <form method="post" action="{{ url_for('retry_job', job_id=j.id) }}"><button class="text-button" type="submit">Retry</button></form>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr class="empty-row"><td colspan="8"><div class="empty-state"><span>▤</span><b>No jobs submitted</b><small>Sign in as a student and upload a PDF to test the queue.</small></div></td></tr>
+    {% endfor %}
+    </tbody></table>
+  </div>
+</section>
+<div class="content-grid lower-grid">
+  <section class="panel">
+    <div class="panel-heading"><div><div class="eyebrow">SYSTEM ACTIVITY</div><h2>Recent events</h2></div><a class="text-button" href="{{ url_for('analytics') }}">Analytics →</a></div>
+    <div class="event-list">
+      {% for e in events %}
+      <div class="event-row"><span class="event-dot"></span><div><b>{{ e.event_type.replace('_',' ') }}</b><p>{{ e.message }}</p><small>{{ e.created_at.replace('T',' ') }}</small></div></div>
+      {% else %}<p class="muted">Events will appear after you submit jobs or change printer settings.</p>{% endfor %}
+    </div>
+  </section>
+  <section class="panel concept-panel">
+    <div class="eyebrow">OS LAB NOTES</div><h2>What this demonstrates</h2>
+    <div class="concept-row"><span>01</span><div><b>Scheduling</b><p>FCFS, SJF, priority, aging</p></div></div>
+    <div class="concept-row"><span>02</span><div><b>Synchronization</b><p>Protected printer allocation</p></div></div>
+    <div class="concept-row"><span>03</span><div><b>Resource management</b><p>Printer availability and compatibility</p></div></div>
+    <div class="concept-row"><span>04</span><div><b>Fault handling</b><p>Requeue on simulated printer failure</p></div></div>
+  </section>
+</div>
+<script>window.CPM = { role: "admin", statusUrl: "{{ url_for('api_status') }}", tickUrl: "{{ url_for('tick_simulation') }}" };</script>
+{% endblock %}

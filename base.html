@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CampusPrint{% endblock %} · Smart Campus Print Queue</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script defer src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}">
+      <span class="brand-mark">CP</span>
+      <span>Campus<span class="brand-light">Print</span><small>SMART PRINT QUEUE</small></span>
+    </a>
+    <nav>
+      {% if current_user %}
+        {% if current_user.role == 'admin' %}
+          <a href="{{ url_for('admin_dashboard') }}">Operations</a>
+          <a href="{{ url_for('analytics') }}">Analytics</a>
+        {% else %}
+          <a href="{{ url_for('dashboard') }}">My jobs</a>
+        {% endif %}
+        <span class="nav-user">{{ current_user.display_name }}</span>
+        <form method="post" action="{{ url_for('logout') }}" class="inline-form">
+          <button class="button button-ghost button-small" type="submit">Log out</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('login') }}">Sign in</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="page-shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">
+    <span>CampusPrint · Operating Systems Project</span>
+    <span>Queue management · Resource allocation · Synchronization</span>
+  </footer>
+</body>
+</html>

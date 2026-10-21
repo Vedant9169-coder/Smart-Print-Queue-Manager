@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="pulse-dot"></span> CAMPUS PRINT OPERATIONS</div>
+    <h1>Shared printers.<br><span>Smarter queues.</span></h1>
+    <p class="hero-text">A campus print management simulator that schedules jobs, allocates printers, handles failures, and measures performance using Operating Systems concepts.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="{{ url_for('login') }}">Open dashboard <span>→</span></a>
+      <a class="button button-secondary" href="#features">Explore features</a>
+    </div>
+    <div class="hero-meta"><span>● 5 demo printers</span><span>● 4 scheduling policies</span><span>● Live simulation</span></div>
+  </div>
+  <div class="hero-visual">
+    <div class="visual-top"><span class="window-dots"><i></i><i></i><i></i></span><span>QUEUE OVERVIEW</span><span class="live-pill">LIVE DEMO</span></div>
+    <div class="visual-stats">
+      <div><small>WAITING JOBS</small><strong>08</strong><span class="stat-muted">in queue</span></div>
+      <div><small>PRINTERS ONLINE</small><strong>04<span class="out-of"> / 05</span></strong><span class="stat-green">80% available</span></div>
+    </div>
+    <div class="mini-queue">
+      <div class="mini-row"><span class="mini-icon purple">PDF</span><span><b>OS_Assignment.pdf</b><small>20 pages · Normal</small></span><em class="status status-printing">PRINTING</em></div>
+      <div class="mini-row"><span class="mini-icon blue">PDF</span><span><b>Lab_Record.pdf</b><small>15 pages · High</small></span><em class="status status-waiting">WAITING</em></div>
+      <div class="mini-row"><span class="mini-icon orange">PDF</span><span><b>Research_Paper.pdf</b><small>40 pages · Normal</small></span><em class="status status-waiting">WAITING</em></div>
+    </div>
+    <div class="visual-footer"><span class="pulse-dot"></span> Scheduler active <span>Priority + Aging</span></div>
+  </div>
+</section>
+<section class="feature-section" id="features">
+  <div class="section-heading"><div class="eyebrow">BUILT AROUND OS CONCEPTS</div><h2>More than a print queue.</h2><p>A practical application with real scheduling logic and a controllable simulation.</p></div>
+  <div class="feature-grid">
+    <article class="feature-card"><span class="feature-number">01</span><div class="feature-icon">↗</div><h3>Job scheduling</h3><p>Compare FCFS, Shortest Job First, Priority, and Priority with Aging.</p></article>
+    <article class="feature-card"><span class="feature-number">02</span><div class="feature-icon">▦</div><h3>Resource allocation</h3><p>Allocate compatible printers without assigning one printer to two jobs.</p></article>
+    <article class="feature-card"><span class="feature-number">03</span><div class="feature-icon">⟳</div><h3>Failure recovery</h3><p>Take a printer offline and safely return its interrupted job to the queue.</p></article>
+    <article class="feature-card"><span class="feature-number">04</span><div class="feature-icon">⌁</div><h3>Performance analytics</h3><p>Measure completed-job waiting time, turnaround time, and printer activity.</p></article>
+  </div>
+</section>
+<section class="login-hint"><div><h3>Ready to try the simulation?</h3><p>Use the included demo student or administrator account.</p></div><a class="button button-primary" href="{{ url_for('login') }}">Sign in to continue →</a></section>
+{% endblock %}

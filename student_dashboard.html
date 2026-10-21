@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}My dashboard{% endblock %}
+{% block content %}
+<section class="dashboard-heading">
+  <div><div class="eyebrow">STUDENT WORKSPACE</div><h1>My print jobs<span class="heading-period">.</span></h1><p>Submit a PDF and follow it through the print queue.</p></div>
+  <div class="sim-badge"><span class="pulse-dot"></span> Simulation running</div>
+</section>
+<section class="stats-grid">
+  <div class="stat-card"><span class="stat-label">Waiting</span><strong id="count-WAITING">{{ counts.WAITING }}</strong><span class="stat-foot">Jobs in queue</span></div>
+  <div class="stat-card"><span class="stat-label">Printing</span><strong id="count-PRINTING">{{ counts.PRINTING }}</strong><span class="stat-foot">Currently processing</span></div>
+  <div class="stat-card"><span class="stat-label">Completed</span><strong id="count-COMPLETED">{{ counts.COMPLETED }}</strong><span class="stat-foot">Successfully printed</span></div>
+  <div class="stat-card"><span class="stat-label">Failed</span><strong id="count-FAILED">{{ counts.FAILED }}</strong><span class="stat-foot">Need attention</span></div>
+</section>
+<div class="content-grid student-grid">
+  <section class="panel submit-panel">
+    <div class="panel-heading"><div><div class="eyebrow">NEW REQUEST</div><h2>Submit a print job</h2></div><span class="panel-icon">＋</span></div>
+    <form action="{{ url_for('submit_job') }}" method="post" enctype="multipart/form-data" class="submit-form">
+      <label class="upload-zone" for="document">
+        <span class="upload-symbol">↑</span><strong>Choose a PDF document</strong><span>Click to browse · PDF only · max {{ max_upload_mb }} MB</span>
+        <input id="document" type="file" name="document" accept=".pdf,application/pdf" required>
+        <small id="file-name">No file selected</small>
+      </label>
+      <div class="form-row">
+        <label>Copies<input type="number" name="copies" min="1" max="20" value="1" required></label>
+        <label>Priority<select name="priority"><option value="NORMAL">Normal</option><option value="HIGH">High</option><option value="URGENT">Urgent</option></select></label>
+      </div>
+      <label class="checkbox-row"><input type="checkbox" name="color"><span><b>Color printing</b><small>Only printers supporting color will be considered.</small></span></label>
+      <button class="button button-primary button-full" type="submit">Submit to queue <span>→</span></button>
+    </form>
+    <p class="form-note">Printing is simulated; no physical printer is contacted.</p>
+  </section>
+  <section class="panel printer-panel">
+    <div class="panel-heading"><div><div class="eyebrow">RESOURCE STATUS</div><h2>Campus printers</h2></div><span class="live-pill">LIVE</span></div>
+    <div class="printer-list" id="printer-list">
+      {% for p in printers %}
+      <div class="printer-row" data-printer-id="{{ p.id }}">
+        <div class="printer-symbol">▤</div><div class="printer-info"><b>{{ p.name }}</b><small>{{ p.pages_per_minute }} pages/min · {{ 'Color + B&W' if p.supports_color else 'B&W only' }}</small></div>
+        <span class="status status-{{ p.status|lower }}">{{ p.status }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="info-callout"><span>i</span><p>Jobs are assigned only to available printers compatible with the requested print mode.</p></div>
+  </section>
+</div>
+<section class="panel jobs-panel">
+  <div class="panel-heading"><div><div class="eyebrow">YOUR ACTIVITY</div><h2>Recent print jobs</h2></div><span class="subtle-label">Updates automatically</span></div>
+  <div class="table-wrap">
+    <table><thead><tr><th>JOB / DOCUMENT</th><th>PAGES</th><th>PRIORITY</th><th>PRINTER</th><th>STATUS</th><th>PROGRESS</th><th>ACTION</th></tr></thead>
+    <tbody id="jobs-table">
+    {% for j in jobs %}
+      <tr data-job-id="{{ j.id }}">
+        <td><div class="job-title">{{ j.public_id }}</div><div class="table-sub">{{ j.original_filename }}</div></td>
+        <td>{{ j.page_count * j.copies }}</td>
+        <td><span class="priority priority-{{ j.priority|lower }}">{{ j.priority }}</span></td>
+        <td>{{ j.printer_name or '—' }}</td>
+        <td><span class="status status-{{ j.status|lower }}">{{ j.status }}</span></td>
+        <td><div class="progress-cell"><div class="progress-track"><span style="width: {{ (100*j.progress_pages/(j.page_count*j.copies))|round|int if j.page_count*j.copies else 0 }}%"></span></div><small>{{ j.progress_pages }}/{{ j.page_count*j.copies }} pages</small></div></td>
+        <td>{% if j.status in ['WAITING','ASSIGNED'] %}<form method="post" action="{{ url_for('cancel_job', job_id=j.id) }}"><button class="text-button" type="submit">Cancel</button></form>{% else %}—{% endif %}</td>
+      </tr>
+    {% else %}
+      <tr class="empty-row"><td colspan="7"><div class="empty-state"><span>▤</span><b>No print jobs yet</b><small>Submit your first PDF to see it here.</small></div></td></tr>
+    {% endfor %}
+    </tbody></table>
+  </div>
+</section>
+<div class="simulation-note"><span class="note-icon">⌁</span><div><b>OS concepts in action</b><p>The queue demonstrates scheduling, shared-resource allocation, mutual exclusion, and safe re-queuing after a simulated printer failure.</p></div></div>
+<script>window.CPM = { role: "student", statusUrl: "{{ url_for('api_status') }}", tickUrl: "{{ url_for('tick_simulation') }}" };</script>
+{% endblock %}

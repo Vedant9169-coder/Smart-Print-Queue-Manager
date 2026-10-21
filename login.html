@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<section class="login-layout">
+  <div class="login-intro">
+    <div class="eyebrow">WELCOME TO CAMPUSPRINT</div>
+    <h1>Print work,<br><span>without the chaos.</span></h1>
+    <p>Sign in to submit a document or manage the campus print queue.</p>
+    <div class="login-bullets"><span>✓ Scheduling policies</span><span>✓ Live printer status</span><span>✓ Failure simulation</span></div>
+  </div>
+  <form method="post" class="login-card">
+    <div class="card-heading"><div class="feature-icon">↗</div><h2>Sign in</h2><p>Use one of the local demo accounts.</p></div>
+    <label>Username<input name="username" autocomplete="username" required placeholder="Enter username"></label>
+    <label>Password<input name="password" type="password" autocomplete="current-password" required placeholder="Enter password"></label>
+    <button class="button button-primary button-full" type="submit">Continue <span>→</span></button>
+    <div class="demo-credentials">
+      <strong>Demo access</strong>
+      <div><span>Student</span><code>student / student123</code></div>
+      <div><span>Admin</span><code>admin / admin123</code></div>
+    </div>
+  </form>
+</section>
+{% endblock %}
